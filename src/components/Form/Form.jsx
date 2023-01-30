@@ -1,30 +1,52 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
-import css from "./Form.module.css";
+import { nanoid } from 'nanoid';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from '../../redux/contactsSlice';
+import css from './Form.module.css';
 
-export function Form({ onSubmit }) {
+export function Form() {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
   const handleNameChange = event => {
     setName(event.currentTarget.value);
   };
-
   const handleNumberChange = event => {
     setNumber(event.currentTarget.value);
   };
 
+  const contactsFromStore = useSelector(state => state.contacts.data);
+  const dispatch = useDispatch();
+
+  const handleFormData = (newName, newNumber) => {
+    const arrayOfNames = contactsFromStore.map(contact => contact.name);
+    const nameToLowerCase = newName.toLowerCase();
+    const nameIsPresent = arrayOfNames.find(
+      element => element.toLowerCase() === nameToLowerCase
+    );
+    if (!nameIsPresent) {
+      const newContact = {
+        id: nanoid(),
+        name: newName,
+        number: newNumber,
+      };
+      dispatch(addContact(newContact));
+      return true;
+    }
+    return alert(`${newName} is already in contacts`);
+  };
+
   const handleFormSubmit = event => {
     event.preventDefault();
-    const onSubmitResult = onSubmit(name, number);    
+    const onSubmitResult = handleFormData(name, number);
     if (onSubmitResult) {
       formCleaner();
-    }      
+    }
   };
 
   const formCleaner = () => {
     setName('');
-    setNumber('');   
+    setNumber('');
   };
 
   return (
@@ -55,12 +77,9 @@ export function Form({ onSubmit }) {
           required
         />
       </label>
-      <button className={css.addBatton} type="submit">Add contact</button>
+      <button className={css.addBatton} type="submit">
+        Add contact
+      </button>
     </form>
   );
-};
-
-Form.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};
-
+}
